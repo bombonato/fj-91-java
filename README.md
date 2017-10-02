@@ -110,13 +110,66 @@ time java -XX:CompileThreshold=1 -XX:+TieredCompilation -XX:+PrintCompilation Fi
 -Xint
 * desabilita totalmente o JIT
 
+
+Otimizando mais o codigo C
+```bash
+gcc -O3 -o fibonacci_X fibonacci.c
+```
+
+```bash
+gcc -m32 -mfpmath=sse -Ofast -flto -march=native -funroll-loops -o fibonacci_X fibonacci.c
+```
+
+YouTube JIT
+- JVM JIT for dummies
+- https://www.youtube.com/watch?v=0Yud4Q2HEz4
+- https://www.youtube.com/watch?v=FnDHp3Qya6s
+
 ### Garbage Collector
+
+Primeiros momentos o algoritimo usado é *Mark and Sweep* (não mais utilizado hoje em dia). Enquanto rodava, parava a threads, parava o mundo (stop the world) 
+* era lento
+* trava o programa sempre que rodava
+* deixava a memória fragmentada
+
+Segundo momento, foi feito um estudo, chamado Hipótese das Gerações. Qdo rodava, 95% dos objetos eram eliminados. Mas faz sentido, pois a maioria dos objetos perdem a referência muito cedo. Uma var local, em um for, um if, etc, cria e inutiliza muito rápido.
+
+Com isso, mudou a forma de liberar e como o gc funcionava. Chamou o algoritimo de *Generational Copying*. A idéia é copiar o que ainda está em uso (os 2% que não morre) para outra área e marcar o que foi copiado dizendo que pode ser reutilizado. Assim, não mais apagando e liberando os espaços, mas sim só indicando.
+
+A JVM da Oracle, a JVM HotSpot, separa em 2 áreas grandes **Young** e **Old**, a idéia é copiar os objetos de Yong para Old, mas antes de fazer a cópia dos objetos ainda ativos(referenciados), eles são maturados, ou seja, ainda dentro da Young, ele cria 2 outras sub-áreas, S0 e S1, ao medida que vai fazendo as varreduras de gc, passa de Young para S0, em uma outra passada repassa de S0 para S1 e, no final, se o objeto ainda está ativo e possui referência então ai sim copia para Old (pois tem grande possibilidade de continuar ativo e não ser descartado). Pág 23.
+
+O espaço da Young e Old fica no espaço chamado **Heap**. Existe outro espaço permanente chamado **PermGen**, no Java8 mudou para **MetaSpace** (pg 27).
+
+* Young e Old: ficam os objetos do sistema
+* PermGen: onde ficam as Classes, Strings, Internals
+
+
+### Algoritimos
+* Serial (tempo de parada maior, 5ms)
+* Parallel (tempo 3ms)
+* CMS (1ms)
+
+Se não escolhar nada, normalmente a jvm pelo ergonomics vai escolher o algoritimo CMS. No java7, lança um novo algoritimo chamado *G1*, mas o padrão ainda fica como o CMS. A partir do Java8 ele já utiliza do G1 como padrão.
+
+* G1
+    * Completamente diferente, ele faz um Garbage First. Quebra toda a memória em uma matrix de vários quadrados/espaços (não usa mais a separação de Young e Old), e consegue descobrir uma região que mais tem objetos mortos, com isso ele consegue isolar só uma área para realizar a parada e efetuar o garbage colector nesta região, aumentando consideravelmente o desempenho. (pág. 29)
+
+-XX:NewSize
+* definir o tamanho da área do Young
+
+-XX:NewRatio
+* para definir a proporção do tamanho da memória heap do Young
 
 ```bash
 java -verbose:gc EstressaGC
 ```
-e
 
 ```bash
 java -Xms100m -Xmx100m EstressaGC
 ```
+
+```bash
+java -verbose:gc -Xmx100M -Xms100M -XX:NewSize=80M EstressaGC
+```
+
+App **VisualVM 1.3.8** [link](https://visualvm.java.net)
