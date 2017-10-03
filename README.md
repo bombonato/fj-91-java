@@ -477,3 +477,12 @@ Contas do 1o semestre: 3
 Contas do 2o semestre: 4
 ```
 
+### Programar para Interfaces
+
+As interfaces são mais seguras e com menos possibilidade de serem alteradas.
+
+Também tem flexibilidade, pode trocar a instância por outra implmentação que também esteja ligada a interface. Consegue mudar a implmentação mexendo em um único ponto, sem gerar impactos de acoplamento.
+
+Usar interfaces Java é um grand ebenefício nestes casos, pois interfaces não carregam nenhum detalhe de implmentação.
+
+A *escolha da interface ideal* vai depender do que você quer permitir que o código invocador possa utilizar e realizar na referência retornada. Quanto menos específica, menor o acomplamento e mais possibilidades de diferentes implementações. Em contrapartida, o código cliente tem uma gama menor de métodos que podem ser invocados.
