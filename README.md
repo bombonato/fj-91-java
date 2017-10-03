@@ -261,5 +261,219 @@ Esconda os comportamentos internos da classe e exponha os comportamentos. Garant
 ```
 
 VER: [Lombok](https://projectlombok.org/)
-* para gerar os getters e setters automaticamente, em tempo de compilação, a geração por anotações.
+* para gerar os getters e setters automaticamente, em tempo de compilação, a geração por anotações. A idéia é não ter que poluir o código com getters e setters e deixar menos verboso.
+
+#### Histórico
+
+Algumas das formas e motivos para utilizar formas de criação de código dessa forma (criações de getters, setters, etc) são resquicios da époco do **EJB2**. Ele acabava forçando a criação seguindo esse modelo, tentava facilitar o acesso a recursos do servidor (controle transacional, requisições, etc), parte de cliente/servidor, que escondia algumas implementações para facilitar a vida do usuário.
+No EJB2, ele fazia um serviço que toda hora acessava o servidor para obter um dado. Existia muitos problemas de escalabilidade.
+
+Como EJB2 era um problema e não tinha muio hardaware na época. Começou a utilizar um padrão chamado **DTO** (ou **VO**), com isso, faz o mapeamento do EJB para esse objeto de transferência de dados, agora só é feita uma chamada no servidor no servio EJB, e o dado é retornado para um DTO/VO. Agora para iterar nos dados é feito localmente.
+
+A própria SUN na époco começou a sugerir um catálogo de padrões (livro *Core J2EE Patters*), o problema disso é que mata a orientação objetos, detona o encapsulamento, sem polimorfismo; O Modelo Anêmico (pg 67), parece um fantoche, quem controla a classe é a outra e não ela mesmo, regras em outra classe. Martin Fowler criticava muito esse modelo. Na época, esses problemas foram foram motivadores para o surgimento do **Springs**.
+
+Martin Fowle, escreve um livro/catálogo *patterns of enterprise application architecture*, um padrão que era mais usado era o **Transactonal Script**, quase toda fábrica de software utilizada. Funciona assim, faz o código da Página => chama Controller => Service (regras de negócio) => DAO (lógica acesso BD) => Entity (mapeia as Entidades no BD). O problema desse modelo é que tem muitos problemas de OO, ex. todas as regras de negócio ficam no Service (200 milhões de linhas), não tem boas práticas de programação. Fácil para aplicar em projetos de CRUD (mas que ainda assim não muito complexos), só vai sentir em projetos depois de 3 a 5 anos, por ficarem grandes.
+
+Outro modelo no livro é o **Domain Model**, mais difícil de encontrar, mais caro. Você terá diversas classes, para projetos que possuem muitas regras, validações, mais fácil de manter nestes tipos de projetos, fácil achar código. (pág 71).
+
+### Herança
+
+* Principal ponto: **reaproveitamento**
+* Outro ponto: **polimorfismo**
+
+Na classe DAO, normalmente os métodos costumam ser padronizados, salvar, pesquisar, apagar, etc. Com isso, muitos usam uma classe DAO Genérica (usando templates). Por normalmente o T é o que muda dessa classe, os métodos específicos, ai sim ficam na classe especializadas.
+
+Dao.java
+```java
+class Dao<T> {
+    public void salvar(T t){
+        this.em.persist(t);
+    }
+}
+```
+
+ClienteDao.java (herança)
+```java
+class ClienteDao extends Dao<Cliente> {
+    public List<Cliente> xpto() {
+        //lógica método especifico do cliente dao
+    }
+}
+```
+
+O problema é que se existe alguma regra e no método pai esta implementado. Exemplo, uma regra que diz um usuário não pode ser excluido, mas no dao genérico existe a implentação do método excluir.
+
+Uma forma de contornar isso, é sobrescrever o método colocando-o vazio. Mas isso faz com que fique sujo a classe específica.
+
+Outra forma de contornar é usar **composicao** em vez de herança. A classe contém a outra (composição) em vez de ser a outra (herança). Mas vai ter que mapear os métodos que irá usar. Outro problema é que gera _acoplamento_.
+
+ClienteDao.java (composição)
+```java
+class ClienteDao {
+    private Dao<Cliente> dao;
+}
+```
+
+Problema na classe Properties do Java
+* tem o setProperties(String, String), mas também tem a put(Object, Object). Isso gera uma certa confusão devido o uso da herança do Map => HashMap
+
+Outro problema é na HttpServelt da javax.servlet.http
+* Ao criar um servlet e extends HttpServlet, quando for sobrescrever o init(), existe uma regra que é preciso lembrar de chamar o método init() do pai antes de executar suas regras do init. Isso quebra o encapsulamento, não existe nada automático, é necessário você saber que deve chamar inicialmente o init herdado do pai.
+```java
+class XptoServlet extends HttpServlet {
+    public void init(ServletConfig config) {
+        super.init(config); // se não chamar vai dar erro na inicialização do servidor de aplicação
+    }
+}
+```
+
+#### Transformar de Herança para Composição
+
+HERANÇA
+* neste caso, acaba herdando vários métodos do pai, que não deveriam ser utilizados, por exemplo o clear() do HashSet, ou seja, aumentando desnecessariamente a interface de uso (herdada pelo HashSet).
+
+```java
+package br.com.caelum.fj91.banco.modelo;
+
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
+
+/**
+ * Organiza as contas do banco por semestre de abertura
+ */
+public class Contas extends HashSet<Conta> {
+
+	private int totalContasPrimeiroSemestre = 0;
+	private int totalContasSegundoSemestre = 0;
+	
+	//@Override
+	public boolean add(Conta conta) {
+		int mes = conta.getDataAbertura().get(Calendar.MONTH);
+		if (mes < 6) {
+			totalContasPrimeiroSemestre++;
+		} else {
+			totalContasSegundoSemestre++;
+		}
+		
+		return super.add(conta);
+	}
+
+	//@Override
+	public boolean addAll(Collection<? extends Conta> c) {
+		
+		return super.addAll(c);
+	}
+	
+	public int size() {
+		return contas.size();
+	}
+
+	public int getTotalContasPrimeiroSemestre() {
+		return totalContasPrimeiroSemestre;
+	}
+	
+	public int getTotalContasSegundoSemestre() {
+		return totalContasSegundoSemestre;
+	}
+	
+}
+```
+
+COMPOSIÇÃO
+* remover a herança
+* criar atributo contas do tipo HashSet<Conta>
+* chamar os métodos a partir deste atributo
+* Assim, consegue reaproveitar o código, sem aumentar desnecessariamente a interfae de uso e de quebra, não precisar saber nada sobre a implmentação interna do HashSet.
+
+```java
+package br.com.caelum.fj91.banco.modelo;
+
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
+
+/**
+ * Organiza as contas do banco por semestre de abertura
+ */
+//public class Contas extends HashSet<Conta> {
+public class Contas {
+
+	private int totalContasPrimeiroSemestre = 0;
+	private int totalContasSegundoSemestre = 0;
+	
+	HashSet<Conta> contas = new HashSet<Conta>();
+	
+	//@Override
+	public boolean add(Conta conta) {
+		int mes = conta.getDataAbertura().get(Calendar.MONTH);
+		if (mes < 6) {
+			totalContasPrimeiroSemestre++;
+		} else {
+			totalContasSegundoSemestre++;
+		}
+		
+		//return super.add(conta);
+		return contas.add(conta);
+	}
+
+	//@Override
+	public boolean addAll(Collection<? extends Conta> c) {
+		for (Conta conta : c) {
+			int mes = conta.getDataAbertura().get(Calendar.MONTH);
+			if (mes < 6) {
+				totalContasPrimeiroSemestre++;
+			} else {
+				totalContasSegundoSemestre++;
+			}
+		}
+		
+		//return super.addAll(c);
+		return contas.addAll(c);
+	}
+	
+	public int size() {
+		return contas.size();
+	}
+
+	public int getTotalContasPrimeiroSemestre() {
+		return totalContasPrimeiroSemestre;
+	}
+	
+	public int getTotalContasSegundoSemestre() {
+		return totalContasSegundoSemestre;
+	}
+	
+}
+```
+Utilizando:
+```java
+public static void main(String[] args) {
+		
+    // gera diversas contas diferentes
+    Conta c1 = new Conta(123, new GregorianCalendar(2009, 1, 5));
+    Conta c2 = new Conta(250, new GregorianCalendar(2009, 3, 10));
+    Conta c3 = new Conta(327, new GregorianCalendar(2010, 5, 15));
+    Conta c4 = new Conta(443, new GregorianCalendar(2010, 7, 17));
+    Conta c5 = new Conta(533, new GregorianCalendar(2011, 9, 19));
+    Conta c6 = new Conta(620, new GregorianCalendar(2011, 10, 22));
+    Conta c7 = new Conta(793, new GregorianCalendar(2011, 11, 27));
+    
+    // armazena as contas
+    Contas contas = new Contas();
+    contas.addAll(Arrays.asList(c1, c2, c3, c4, c5, c6, c7));
+    
+    // testes
+    System.out.println("Total de contas: " + contas.size());
+    System.out.println("Contas do 1o semestre: " + contas.getTotalContasPrimeiroSemestre());
+    System.out.println("Contas do 2o semestre: " + contas.getTotalContasSegundoSemestre());
+}
+```
+
+Retorno:
+```bash
+Total de contas: 7
+Contas do 1o semestre: 3
+Contas do 2o semestre: 4
+```
 
