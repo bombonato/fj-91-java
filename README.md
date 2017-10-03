@@ -125,6 +125,8 @@ YouTube JIT
 - https://www.youtube.com/watch?v=0Yud4Q2HEz4
 - https://www.youtube.com/watch?v=FnDHp3Qya6s
 
+Para o **-Xms** e **-Xmx** é boa prática subir o servidor setando estes valores, evitando que o OS e JVM definam um valor por eles mesmos. Outra boa prática é suber tanto o -Xms e -Xmx com o MESMO valor.
+
 ### Garbage Collector
 
 Primeiros momentos o algoritimo usado é *Mark and Sweep* (não mais utilizado hoje em dia). Enquanto rodava, parava a threads, parava o mundo (stop the world) 
@@ -143,6 +145,9 @@ O espaço da Young e Old fica no espaço chamado **Heap**. Existe outro espaço 
 * Young e Old: ficam os objetos do sistema
 * PermGen: onde ficam as Classes, Strings, Internals
 
+Ao analisar seu sistema, não é para o GC executar toda hora, ele deve rodar de vez enquando. Se esse for o caso, analisar o código (ex. pelo VisualVM outra ferramente de profiling) e analisar a parte do código onde está travando e consumindo muito.
+
+De modo geral, não interferir no GC ou depender de seu comportamento é uma boa prática. (pg 33)
 
 ### Algoritimos
 * Serial (tempo de parada maior, 5ms)
@@ -172,4 +177,89 @@ java -Xms100m -Xmx100m EstressaGC
 java -verbose:gc -Xmx100M -Xms100M -XX:NewSize=80M EstressaGC
 ```
 
+-XX:MaxMetaspaceSize=64m
+* Limitar o tamanho do Metaspace no Java 8
+
 App **VisualVM 1.3.8** [link](https://visualvm.java.net)
+
+# Aula 2
+
+## Classloader
+
+Classloader, de maneira simplista, é uma classe que carrega classes para a memória.
+
+É carregado no espaço PermGen.
+
+pg 38
+
+Existem 3 Classloaders principais do Java:
+* Bootstrap
+* Extension
+* Application
+
+Funciona em uma maneira de hierarquia. Toda vez que o Classloader vai carregar uma classe, ele pergunta ao classloader do pai se ELE consegue carregar, dessa forma, vai verificando na herança se os Classloaders do sistema consegue carregar uma classe específica. Assim, ele nunca vai carregar uma classe criada e sobrescrita pelo usuário que pertence ao sistema, criando assim um *mecanismo de segurança*.
+
+### Classloader Hell (pg 41)
+É possível criar seu próprio Classloader, basta herdar da classe Classloader. Mas não é uma boa prática. Dificilmente irá precisar fazer isso.
+
+Nos servidores de aplicação (pg 40)
+* Eles criam seu próprio Classloader
+* Bibliotecas comuns - usadas por vários projetos e na mesma versão - usar o *Container classloader*
+* Bibliotecas específicas, então usar o *WebApplication classloader*
+
+Lembrar que as classes são carregadas por hierarquia. Logo, 
+
+Exceções
+* nesse contexto, dependendo das versões de libs que estão rodando no servidor e na sua aplicação, é possível ter situações estranhas (ex. pega alguns métodos de uma lib mais nova que esta no servidor e outros métodos de libs mais antiga que está no seu projeto).
+
+* algumas possíveis exceções relacionadas a problemas de carregamento de libs:
+    * ClassNotFoundException
+    * NoSuchMethodError
+    * ClassCastException
+
+Um conceito que começaram a usar é de *Classloader Invertido*, onde na hierarquia o WebApplication herda diretamente da Bootstrap e tem uma referencia para o Container. A idéia é tentar dar prioridade as libs da aplicação. Contudo, essa prática não é recomendada, pode dar muitos problemas.
+
+*Apache Xerces*
+Ex. procurar por DOMParser (CTrl+T no Eclipse)
+* org.apache. - para usar a versão 1
+* org.sun.org.apache. - embutida no java, para versão 2
+
+*JAXBContext*
+* foi criado um diretório **endorsed** para ter prioridade no carregamento (pg 43). Pode ser passada pelo comando *-Djava.endorsed.dirs=*. No servidor de aplicação tem um diretório chamado endorsed, colocar as libs lá significa que o adm/programador endossa estas libs.
+
+``` 
+Acredita-se que uma Classe é igual quando tem o mesmo nome e mesmo pacote. Mas para o Java, também ele considera que a classe é igual se carregada no MESMO classloader. Ou seja, se mesmo o nome da classe for igual, mas carregada por classloader diferentes, então pode dar algum erro (ex. CastException)
+```
+
+Ao usar uma biblioteca que serializa um objeto e deserializa de volta para memória, verificar se não pode causar algum problema sobre erros de carregamento de classloader (ex. CastException). Pois ao serializar usa um classloader ao recarregar usa outro classloader.
+
+OutOfMemoryError e Classloader
+* É quase impossível uma aplicação Java conseguir evitar leaks de classloaders, por isso, em algum momento surgem os OutOfMemoryError frequentes nos hot deploys, sendo esse mais um motivo para evitá-los em produção.
+
+## Design OO
+
+### Encapsulamento
+
+Não é questão de somente mudar os atributos para privado e gerar getter's e setter's.
+
+```
+Encapsular está mais para restringir e refletir a realidade em objetos, ou seja, respeitar as regras externas e incluir no objetos. Protegendo os atributos da classe evitando inconsistências no objeto.
+```
+
+Exemplo, em uma classe de Conta, existe o método sacar(), nele contempla suas regras em que momento pode ser feito um saque. Já o atributo saldo, não faz sentido criar um setSaldo(valor), visto que quebraria a regra que checa se a conta possui saldo e pode ser diminuida em caso positivo, causando uma inconsistêmcia.
+
+Encapsulameno também tem haver com esconder os detalhes internos da classe. Por exemplo, na classe interna uso um List, e externamente (cliente) obtenho essa lista e uso um método da lista (.contains()); no futuro, se resolver alterar internamente alguma forma usada na classe, terá impacto externamente (p.ex. se alterar de List para Array, não terá mais o método .contains() usado externamente) - quebrando assim o encapsulamento - pois externamente está sabendo muito sobre o funcionamento da classe, deveria saber menos. Para resolver isso, basta esconder isso - encapsular - aquele funcionamento. Por exemplo, criando um novo método para tratar o que deseja e se no futuro precisar alterar, não irá causar efeito colateral, pois a alteração será somente interna a classe, externamente estrá usando o método criado. Como resultado, diminuindo o acoplamento entre as classes.
+
+```
+Um bom medidor, se mudar em um único ponto do código e não impactar externamente, significa que o código está bom. Agora, se tiver muito efeito colateral, então existe um grande acoplamento.
+```
+
+Outro ponto, a responsabilidade de execução deve ficar interna a classe, pois é ela que sabe seu domínio, como executar suas partes, seus detalhes internos. Exemplo, em uma classe Cafeteira, existem vários métodos internos, com os passos de como realizar a "criação" do café que devem ficam privados e expor uma classe que organiza a forma e os passos de como fazer o cafe (ex. fazerCafe()) que será exposto publicamente, pois quem sabe os passos de fazer o café é a própria classe, não o quem vai chamar externamente.
+
+```
+Esconda os comportamentos internos da classe e exponha os comportamentos. Garantindo a segurança dos atributos e validações e design da classe.
+```
+
+VER: [Lombok](https://projectlombok.org/)
+* para gerar os getters e setters automaticamente, em tempo de compilação, a geração por anotações.
+
