@@ -864,3 +864,65 @@ Ferramentas
 - Selenium
 
 Os problemas dos testes automatizados são as dependencias na arquitetura do projeto, que pode não favorecer os testes automatizados. Por exemplo, testar um EJB, um serviço, algo que foi injetado, que não esta isolado. O ideal é pensar na arquitetura no início já pensando em adicionar os testes (Por exemplo, o DDD facilita a inserção de testes)
+
+## Decisões Arquiteturais
+
+### Requisitos Não Funcionais (RNF)
+
+* os funcionais são as regras de negócio
+* os não funcionais
+	* perfomance de código
+	* usabilidade
+	* escalibilidade
+	* segurança
+	* algo em torno de 50 tipos de RNF
+
+**Extensibilidade**
+- extender o software, adicionar novas características/funcionalidades. O quão simples é de se fazer isso no projeto.
+
+**Manutenibilidade**
+- qual a facilidade de fazer uma manutenção, ajuste, correção no sistema
+
+É muito difícil no mercado encontrar desenvolvedores que se preocupem com estes 2 aspectos
+
+**desempenho**
+
+**escalabilidade**
+- como ele se comporta em situações de carga. Sem mexer com a infra, quanto o sistema aguenta de carga, conexões, etc
+
+**disponibilidade**
+- quanto disponível fica o sistema mesmo em condições adversas.
+
+**segurança**
+- quão seguro é o sistema. Ele proteje os dados. Alguem hacker consegue acessar. Vulnerabilidades do sistema.
+
+**confiabilidade**
+- quão confiável é o sistema. Faz o que era para fazer, exibe a informação correta, conforme o esperado, seguindo as regras e comportamentos esperados.
+
+**gerenciabilidade**
+- consegue mensurar, saber o que está acontecendo. E não só quando apresenta os erros.
+
+
+Com boas práticas de programação é possível atingir os 2 primeiros (extensibiilidade e manutenabilidade)
+
+*Desempenho*: tem haver com tempo de resposta, tempo de espera, tem haver com usabilidade. Melhorar com:
+* Cache
+	* Na JPA => Cache 1 Nível, 2o Nível, identificar entidades passíveis de colocar no cache, etc
+	* No Spring => tem o Spring Cache
+	* No FrontEnd => conf. servidor para fazer cache dos arquivos estáticos (css, imgs, etc)
+* Tunning BD
+	* criação de índices
+	* melhoria em consultas, etc
+* Ajustes JVM
+	* Analisar e verificar que está executando muito FullGC
+	* Mudar o algoritimo de GC mais adequado para o que está fazendo e infra utilizada
+* Refatoramento
+	* Melhorar códigos para rodar com melhor desempenho
+* Otimização no FrontEnd
+	* imagens muito pesada, muitos plugins utilizados, mimificar arquivos das páginas.
+	* Ferramentas de análise de desempenho do frontend: gtmetrics, pagespeed, tiny png, mini pnj
+* Cluster, para melhorar o tempo de acesso se estiver demandando muito.
+* Distribuição de carga de dados.
+* Ajuste de Infra
+
+
