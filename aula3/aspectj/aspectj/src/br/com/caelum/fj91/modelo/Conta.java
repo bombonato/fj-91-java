@@ -1,16 +1,12 @@
-package br.com.caelum.fj91.banco.modelo;
+package br.com.caelum.fj91.modelo;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
-
-import br.com.caelum.fj91.banco.tributacao.Tributo;
 
 public class Conta {
 
 	private BigDecimal saldo = BigDecimal.ZERO;
 	private BigDecimal limite = BigDecimal.ZERO;
-	
-	private Cliente titular;
 	private final int numero;
 	private final Calendar dataAbertura;
 	
@@ -39,13 +35,6 @@ public class Conta {
 		this.limite = limite;
 	}
 	
-	public Cliente getTitular() {
-		return titular;
-	}
-	
-	public void setTitular(Cliente titular) {
-		this.titular = titular;
-	}
 	
 	@Override
 	public String toString() {
@@ -57,8 +46,7 @@ public class Conta {
 	 * @param valor Valor a ser sacado
 	 */
 	public void saca(BigDecimal valor) {
-		//BigDecimal novoSaldo = getSaldo().subtract(valor);
-		BigDecimal novoSaldo = getSaldo().add(valor);
+		BigDecimal novoSaldo = getSaldo().subtract(valor);
 
 		if (novoSaldo.compareTo(limite.negate()) >= 0) {
 			this.saldo = novoSaldo;
@@ -97,7 +85,5 @@ public class Conta {
 	 * Desconta o valor devido do tributo
 	 * @param tributo Regra do tributo a ser aplicado
 	 */
-	public void aplica(Tributo tributo) {
-		this.saldo = saldo.subtract(tributo.calculaDesconto(this));
-	}
+	
 }

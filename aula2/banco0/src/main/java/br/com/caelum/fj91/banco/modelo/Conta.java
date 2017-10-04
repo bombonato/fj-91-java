@@ -67,7 +67,8 @@ public class Conta {
 	 * @param valor Valor a ser sacado
 	 */
 	public void sacar(BigDecimal valor) {
-		BigDecimal novoSaldo = getSaldo().subtract(valor);
+		//BigDecimal novoSaldo = getSaldo().subtract(valor);
+		BigDecimal novoSaldo = getSaldo().add(valor);
 		
 		if (novoSaldo.compareTo(getLimite().negate()) >= 0) {
 			this.saldo = novoSaldo;

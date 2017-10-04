@@ -808,3 +808,59 @@ DAO => retirar dep. da Connection
 O ponto que para realizar o IoC, vai se retirando as depêndencia, deixando mais genérico, mas quem chama acaba ainda tendo a responsabilidade de repassar parâmetros para que a classe possa receber as dependência retiradas (ex. Ao tirar o Connection do DAO, foi criado neste DAO o construtor que recebe como param. conn, mas quem chama precisa conhecer/criar a conn e repassar para a DAO). Com isso, o problema foi repassado para quem chama, sendo assim, chega a um ponto que alguem vai ter que criar e repassar para dentro.
 Com esse problema, surge a idéia de criar uma classe que gerencia a criação destas dependência, assim surge a idéia de usar o padão de Injeção de Dependências, nessa época surge o Spring, CDI, (Pico, Guice, Jboss Sean). No exemplo acima, fica com ele a responsabilidade de criar a Connection e passar para o DAO.
 
+### Programação Orientada a Aspectos (AOP)
+
+Antes de bater no código, ele vai usar a idéia de interceptadores, que vai configurar os *aspectos* todo externamente.
+
+Os frameworks/bibliotecas usam muito essa parte de interceptadores (aspectos) para controlar seu próprio código, o que é auxiliado por esse modelo AOP.
+
+Não pegou muito, era muito complicado seu uso e manutenção, mas é muito utilizado internamente por bibliotecas.
+
+**AspectJ** - biblioteca para uso de programação por aspectos amplamente utilizada.
+
+[*Spring Roo*](https://projects.spring.io/spring-roo/) - projeto do spring, ferramenta de linha de comando, para criação de projetos. Tambem para criar outras partes do projeto, como classes, controllers, cruds, etc. Todo o código gerado é baseado em aspectos.
+
+[Jboss Forge](https://forge.jboss.org/) - Gerar o projeto, não o CRUD, mas o esqueleto.
+
+### ByteCodes (pg 108)
+* Separação de responsabilidades, através de manipulação do bytecode.
+	* ASM, CGLib 
+	* [Javassist](http://jboss-javassist.github.io/javassist/)
+	* [Byte Buddy](http://bytebuddy.net/) (mais atual, mais rápido e mais limpo)
+
+
+- No código para o Hibernate transformar os getters e setters em códigos de consulta SQL ao BD, utiliza bibliotecas de manipulação por Bytecode para poder inseir - em tempo de execução - inserir outras classes (Proxys) para poder acessar os dados necessários e injetar as funcionalidades desejadas (consulta sql)
+
+```java
+Cliente c = em.find(Cliente.class, 37);
+SOP(c.getDependentes().size());
+```
+* neste exemplo de código, o getDependentes() não tem o código SQL, para chegar a consulta SQL, o hibernate usa estas biblotecas de Bytecode para interferir em tempo de execução e gera um *Proxy* do cliente **c**, que ao ser chamada em *c.getDependentes()* realiza a inserção do código sql para obter os dados do banco e retornar para essa classe de proxy (que não é propriamente um Cliente puro) com os recursos necessários para executar a consulta e retornar como a classe de Cliente.
+
+## Testes
+
+Acomplamento Sintático
+- Muda o nome de um método, mas ao ser compilado irá apresentar erro. Neste caso, o compilador até indica que houve um erro ao chamar um método que não existe.
+
+Acomplamento Semântico
+- Tem o método chamado soma, muda sua implementação para devolver a subtração. Nesse caso, tudo fica compilando, pois não apresenta erro, mas a lógica está alterada e errada. Neste caso, só é possível pegar com testes (testes automatizados).
+
+Ferramentas
+* JUnit
+* DBUnit (gerar massa de dados)
+* Biblioteca [Arquillian](http://arquillian.org/) (teste de componentes J2EE)
+* [Mockito](http://site.mockito.org/)
+
+**Teste Unitário**
+* Vou testar essa classe, esse método isolado dos sistemas
+
+**Testes de Integração**
+* Agora, para testar a classe DAO, não dá para testar isolado, irá ter acesso ao banco integrado ao sistema
+
+**Testes de Acentação**
+- teste mais realista
+- end-to-end
+- vai na tela do usuário para testar
+- Selenium
+
+Os problemas dos testes automatizados são as dependencias na arquitetura do projeto, que pode não favorecer os testes automatizados. Por exemplo, testar um EJB, um serviço, algo que foi injetado, que não esta isolado. O ideal é pensar na arquitetura no início já pensando em adicionar os testes (Por exemplo, o DDD facilita a inserção de testes)
