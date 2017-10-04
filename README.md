@@ -486,3 +486,325 @@ Também tem flexibilidade, pode trocar a instância por outra implmentação que
 Usar interfaces Java é um grand ebenefício nestes casos, pois interfaces não carregam nenhum detalhe de implmentação.
 
 A *escolha da interface ideal* vai depender do que você quer permitir que o código invocador possa utilizar e realizar na referência retornada. Quanto menos específica, menor o acomplamento e mais possibilidades de diferentes implementações. Em contrapartida, o código cliente tem uma gama menor de métodos que podem ser invocados.
+
+# Aula 3
+
+Imutabilidade serve mais para os objetos do tipo VO.
+
+## DSL (*Domain-Specific Language*)
+pg 64, pg 76
+- Outra forma de criar este modelo é usando o padrão de design *Builder*
+
+ex.
+```java
+cliente.fazReserva(paraQuarto(num)).de(dataIn).ate(dataOut);
+```
+
+Ou, é possível até chegar a especificação de uma sintaxe externa, chamamos de DSL externa, ex:
+```
+cliente faz reserva do quarto 215 de 12/02/1990 ate 20/02/1990
+```
+Relacionado com o BDD (*Behavior Domain Driven*)
+
+Builder
+
+```java
+public class TransferenciaSimplesAgendada {
+
+	private Conta origem;
+	private Conta destino;
+	private BigDecimal valor;
+	private Calendar horaEfetivacao;
+
+	public TransferenciaSimplesAgendada(Conta origem, Conta destino, BigDecimal valor, Calendar horaEfetivacao) {
+		this.origem = origem;
+		this.destino = destino;
+		this.valor = valor;
+		this.horaEfetivacao = horaEfetivacao;
+	}
+```
+
+uso
+```java
+public class AgendaNovaTransferenciaAction {
+
+	public void execute(int numeroOrigem, int numeroDestino, BigDecimal valor, PrintWriter resposta) {
+		ContaDao dao = new ContaDao();
+		Conta c1 = dao.doNumero(numeroOrigem);
+		Conta c2 = dao.doNumero(numeroDestino);
+		
+		// Instanciação do objeto passando muitos parâmetros, algo errado?
+		TransferenciaSimplesAgendada transferencia = new TransferenciaSimplesAgendada(c2, c1, valor, Calendar.getInstance());
+		
+		new TransferenciaSimplesAgendadaDao().adiciona(transferencia);
+	}
+	
+}
+```
+
+definição transf. recorrente
+```java
+public class AgendaNovaTransferenciaRecorrenteAction {
+
+	public void execute(int numeroOrigem, int numeroDestino, BigDecimal valor,
+			Calendar inicio, Calendar fim, int diaParaExecutar,
+			PrintWriter resposta) {
+		ContaDao dao = new ContaDao();
+		Conta c1 = dao.doNumero(numeroOrigem);
+		Conta c2 = dao.doNumero(numeroDestino);
+
+		// Instanciação do objeto passando muitos parâmetros, a leitura é
+		// natural?
+		TransferenciaRecorrenteAgendada transferencia = new TransferenciaRecorrenteAgendada();
+		transferencia.setOrigem(c1);
+		transferencia.setDestino(c2);
+		transferencia.setDia(diaParaExecutar);
+		transferencia.setPeriodo(new Periodo(inicio, fim));
+		transferencia.setValor(valor);
+```
+
+Mudar os setXXX() para retornarem this e mudar os nomes de setXXX() para algo mais relacionado a funcionalidade/regra executada.
+
+DE
+```java
+public class TransferenciaRecorrenteAgendada {
+
+	private Conta origem;
+	private Conta destino;
+	private Periodo periodo;
+	private BigDecimal valor;
+	
+	// Dia em que a transferência deve acontecer
+	private Integer dia;
+
+	public Conta getOrigem() {
+		return origem;
+	}
+
+	public void setOrigem(Conta origem) {
+		this.origem = origem;
+	}
+
+	public Conta getDestino() {
+		return destino;
+	}
+
+	public void setDestino(Conta destino) {
+		this.destino = destino;
+	}
+
+	public Periodo getPeriodo() {
+		return periodo;
+	}
+
+	public void setPeriodo(Periodo periodo) {
+		this.periodo = periodo;
+	}
+
+	public BigDecimal getValor() {
+		return valor;
+	}
+
+	public void setValor(BigDecimal valor) {
+		this.valor = valor;
+	}
+
+	public Integer getDia() {
+		return dia;
+	}
+
+	public void setDia(Integer dia) {
+		this.dia = dia;
+	}
+
+	public void efetiva() {
+		// Tem que pagar 8 reais por transferencia agendada
+		origem.saca(new BigDecimal(8));
+		origem.transferePara(destino, valor);
+	}
+}
+```
+
+PARA:
+* Perceba que retorna o this nos sets
+* Também foi renomeada o nome dos setXXX() para algo mais relacionado a ação/regra executada. Ex.: setDestino() em paraConta()
+```java
+public class TransferenciaRecorrenteAgendada {
+
+	private Conta origem;
+	private Conta destino;
+	private Periodo periodo;
+	private BigDecimal valor;
+	
+	// Dia em que a transferência deve acontecer
+	private Integer dia;
+
+	public Conta getOrigem() {
+		return origem;
+	}
+
+	public TransferenciaRecorrenteAgendada daConta(Conta origem) {
+		this.origem = origem;
+		return this;
+	}
+
+	public Conta getDestino() {
+		return destino;
+	}
+
+	public TransferenciaRecorrenteAgendada paraConta(Conta destino) {
+		this.destino = destino;
+		return this;
+	}
+
+	public Periodo getPeriodo() {
+		return periodo;
+	}
+
+	public TransferenciaRecorrenteAgendada durante(Periodo periodo) {
+		this.periodo = periodo;
+		return this;
+	}
+
+	public BigDecimal getValor() {
+		return valor;
+	}
+
+	public TransferenciaRecorrenteAgendada valor(BigDecimal valor) {
+		this.valor = valor;
+		return this;
+	}
+
+	public Integer getDia() {
+		return dia;
+	}
+
+	public TransferenciaRecorrenteAgendada noDia(Integer dia) {
+		this.dia = dia;
+		return this;
+	}
+
+	public void efetiva() {
+		// Tem que pagar 8 reais por transferencia agendada
+		origem.saca(new BigDecimal(8));
+		origem.transferePara(destino, valor);
+	}
+}
+```
+
+Alterar o código para uso do padrão Builder criado anteriormente
+
+DE
+```java
+		TransferenciaRecorrenteAgendada transferencia = new TransferenciaRecorrenteAgendada();
+		transferencia.setOrigem(c1);
+		transferencia.setDestino(c2);
+		transferencia.setDia(diaParaExecutar);
+		transferencia.setPeriodo(new Periodo(inicio, fim));
+		transferencia.setValor(valor);
+```
+
+PARA
+```java
+TransferenciaRecorrenteAgendada transferencia = new TransferenciaRecorrenteAgendada()
+			.durante(new Periodo(inicio, fim))
+			.valor(valor)
+			.daConta(c1)
+			.paraConta(c2)
+			.noDia(diaParaExecutar);
+```
+
+Exercício sobre DSL (apostila 4.6 pg 20)
+
+Exemplo de uso de DSL é a biblioteca [Joda Time]()
+
+Scala
+```scala
+    val data = 11 de Fevereiro de 1986
+    //ou
+	val data = 11.de(Fevereiro).de(1986)
+```
+
+## DDD (*Domain-Driven Design*)
+pg 71
+Livro DDD do autor Eric Evans
+
+O coração do DDD é **comunicação**.
+
+**Linguagem Ubíqua**, chegar a termos e vocábulos em comum, uma língua comum, que todos utilizem.
+
+Durante a conversa, a idéia é pegar estas informações, termos e criar um *modelo* (**Modelo de Domínio**), que é uma abstração do problema real, desenvolvida em parceria pelos especialista do domínio e desenvolvedores.
+
+Assim, sempre que for necessário alterar um modelo, será necessário alterar o modelo. Essa é a parte difícil do DDD, é necessário maior esforço aprendendo sobre o domínio, mas em compensação o código esta mais para o reflexo do modelo.
+
+Persistência, envio de emails, telas, tudo isso são *complementos*, não fazem parte do coração do sistema. E que normalmente você irá alterar estes complmentos, mas isso não irá afetar o *dominio da aplicação*.
+
+Diz para fazer a divisão da aplicação em **camadas** (pg 72). Para facilitar o desacoplamento da aplicação. Normalmente divididos em 4 camadas:
+
+* UI (interface com usuário)
+* Application (coordena o fluxo de execução)
+* Domain (o coração do negócio)
+* Infrastructure (persistência, etc, o que dará suporte ao sistema)
+
+Com isso, a idéia é poder mudar as camadas sem causar impactos na aplicação. Assim, é facil trocar as UI's sem efeitos colaterais nas outras camadas.
+
+Alguns **padrões** de projeto são sugeridos para implementar a camada de *domínio*.
+* Entity
+* VO
+* Repository (para representar a persistência)
+
+Principais Pontos do DDD
+* Linguagem Ubiqua
+* Modelo
+* Camadas
+* Padrões
+
+Vantagens
+* Mais fácil de manutenção
+* Mais fácil de aplicar padrões de projeto e a própria orientação a objetos (ex. usar mais facilmente polimorfismo, etc)
+* Mais fácil de lidar com projetos complexos
+* Fácil localizar as classes do domínio.
+* Facilita a criação de Testes de Unidade, pois os códigos estão mais acessíveis e organizados/separados, em vez de dentro de serviços e outras regras internas do modelo de fábrica.
+
+
+* [infoQ - DDD Quickly](https://www.infoq.com/br/articles/ddd-10-anos)
+* https://www.infoq.com/br/articles/ddd-10-anos
+* Livro: [Implementing DDD](https://www.amazon.com.br/Implementing-Domain-Driven-Design-Vaughn-Vernon/dp/0321834577) - [Códigos GitHub](https://github.com/VaughnVernon/IDDD_Samples)
+* Projeto DDD Rodrigo Caelum (bit.ly/domain-model)
+
+
+## Separação de Responsabilidades (SoC)
+pg 79
+
+SoC - *Separation of Concerns* 
+
+É mais simples manter um sistema composto por classes que contêm apenas uma responsabilidade bem definida, já que a alteração de um comportamento é feito em uma única classe do sistema. O programador deve bustar classes com *baixo acomplamento* e *alta coesão*
+
+**Acomplamento** - quando dois elementos estão amarrados entre si e quanto as alterações no comportamento de um afetam o de outro.
+
+Baixa Coesão: faz coisas de mais, acumular muita responsabilidade.
+
+Minimizar o acoplamento implica também facilitar a troca dos mesmos.
+
+Possíveis problemas em códigos, exemplo, em classes DAO executadas até hoje.
+* Código Ruim (difícil leitura e interpretação)
+* infraestrutura (um código que abre e fecha conexão toda hora, sem gerencimanto)
+* negócio (em um momento de erro, não é feito o controle de transação)
+
+Refatorando uma DAO:
+
+DAO => retirar dep. da Connection
+* isolar a Connection, devido as dependências.
+* simplesmente receberá a connection e não precisa saber de onde veio. P.ex. definindo um construtor que recebe a Connection e guarda em um atributo da classe
+* nesta classe, basicamente os métodos irão usar a conexão atribuida no construtor, com isso, diminuindo o acoplamento.
+
+### IoC (*Inversion of Control*)
+* antes a própria classe fazer o controle (ex. da Connection), agora a responsabilidade (controle) é feito por outra classe. Cada classe cuida de uma coisa, cada um tem sua propria responsabilidade.
+* Objetivo é facilitar a manutenção do código
+* Padrões de IoC
+	* Injeção de Dependências (DI - Dependency Injection) (pg 82/87)
+	* Listener
+
+O ponto que para realizar o IoC, vai se retirando as depêndencia, deixando mais genérico, mas quem chama acaba ainda tendo a responsabilidade de repassar parâmetros para que a classe possa receber as dependência retiradas (ex. Ao tirar o Connection do DAO, foi criado neste DAO o construtor que recebe como param. conn, mas quem chama precisa conhecer/criar a conn e repassar para a DAO). Com isso, o problema foi repassado para quem chama, sendo assim, chega a um ponto que alguem vai ter que criar e repassar para dentro.
+Com esse problema, surge a idéia de criar uma classe que gerencia a criação destas dependência, assim surge a idéia de usar o padão de Injeção de Dependências, nessa época surge o Spring, CDI, (Pico, Guice, Jboss Sean). No exemplo acima, fica com ele a responsabilidade de criar a Connection e passar para o DAO.
+
