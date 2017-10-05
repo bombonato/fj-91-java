@@ -1008,6 +1008,10 @@ AND senha='"+$senha+"';
 - outra idéia seria usar o "prompt" para pedir entrar com alguma infomação, que poderia ser uma msg "sua seção expirou, entre novamente com sua senha" e lançar um prompt para capturar a senha do usuário.
 - Um ataque conhecido de XSS foi no MySpace, mascarando um javascript dentro de um código html (bit.ly/samy-xss).
 
+Ainda sobre XSS
+- http://blog.caelum.com.br/seguranca-em-aplicacaoes-web-xss/
+- http://blog.caelum.com.br/seguranca-em-aplicacaoes-web-injecao-de-novos-parametros/
+
 #### Session Hijack
 - se o tomcat tem uma seção contendo um ID, é implementado por cookies a forma de guardar o número da seção do usuário. Um ataque seria refazer o pedido chutando um número (como se tivesse pego o cockie da máquina do usuário contendo o id da seção). Hoje implementam algoritimos de hash para esconder o id, ficando inviável a descoberta por chute do número
 
@@ -1021,5 +1025,17 @@ Bibliotecas
 	- Componentes vulneráveis (roda análise em todos os jars e gera um relatório de vulnerabilidades)
 
 
+Exercício de Disponibilidade do LoadBalancer
+
+```bash
 export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
+```
+Sobre uso de 1 banco de dados em um cluster de tomcat
+loadbalancer/configs/serverstate-database/tomcat1/conf/context.xml
+- verificar o PersistentManager e o JDBCStore
+
+Sobre uso de memcache em crossside usando cluster de tomcat
+loadbalancer/configs/serverstate-memcached/tomcat1/conf/context.xml
+- reparar o MemcachedBackupSessionManager e a configuração dos nós do Memcached
+

@@ -1,5 +1,7 @@
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
-	<h1>Conta ${conta.numero} do ${conta.titular.nome}</h1>
+	<h1>Conta <c:out value="${conta.numero}" escapeXml="true" /> do 
+			<c:out value="${conta.titular.nome}" escapeXml="true" /></h1>
 	
 	<h3>Saldo atual: ${conta.saldo}</h3>
 	

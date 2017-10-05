@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+    <WatchedResource>WEB-INF/web.xml</WatchedResource>
+    
+    <!-- grava session backup no n1, caso n1 nao está disponivel grava no n2 -->
+    <Manager pathname="/livraria" className="de.javakaffee.web.msm.MemcachedBackupSessionManager"
+	    memcachedNodes="n1:localhost:11211 n2:localhost:11212"
+	    failoverNodes="n2"
+	    requestUriIgnorePattern=".*\.(png|gif|jpg|css|js)\.cfm$"
+	    sessionBackupAsync="false"
+	    sessionBackupTimeout="180"
+            copyCollectionsForSerialization="false"
+            transcoderFactoryClass="de.javakaffee.web.msm.JavaSerializationTranscoderFactory"
+    />
+
+</Context>

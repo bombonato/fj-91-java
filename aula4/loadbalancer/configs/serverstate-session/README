@@ -1,0 +1,57 @@
+Config: Haproxy (sticky) com session-state nos tomcats (nao replicado, sem backup)
+
+Gancho: Escalabilidade horizontal para aplicacao web.  Introduze balanceamento de carga e stickyness. Deixa o problema da confiabilidade surgir.
+
+Arquitetura:
+
+	     haproxy (8080)
+	    /       	 \
+     tomcat1 (8081)       tomcat2 (8082)     
+    (session state)  	  (session state)
+
+
+Tradeoff:
+ * alta-diponibilidade (outro tomcat pode assumir)
+ * escalavel (linear, só adicionar mais tomcats)
+ * não confiavel (pode perder o session state quando um tomcat cai)
+ * perde um pouco de desempenho pois mais um tier   
+
+
+Acesso: 
+ URI: http://localhost:8080/livraria
+ Via tomcat1: http://localhost:8081/livraria
+ Via tomcat2: http://localhost:8082/livraria
+
+Configuracoes:
+-> Haproxy no modo sticky
+ Exemplo sticky com cookie prefixo é configurado no haproxy.conf: cookie JSESSIONID prefix
+ Exemplo Cookie gerado no browser: JSESSIONID=tomcat2~A7D83AEC756577D29B27BDA329E60C80
+-> Tomcats nao tem nenhuma config especial
+
+Para rodar:
+-> na pasta do haproxy:
+ ./run-haproxy-sticky.sh
+
+-> na pasta configs serverstate-session: 
+ ./run-tomcat1.sh
+ ./run-tomcat2.sh
+  
+
+Sugestao de ordem para executar:
+
+1. Inicia tomcats com shs na pasta config 
+1.1 menciona deploy já foi feito, o war esta na pasta deploy
+1.2 usa uma console para cada tomcat
+2. Acesse cada tomcat mudando a porta 
+2.1 mostra o cookie JSESSIONID com firebug e 
+3. Inicie haproxy no modo sticky 
+3.1 explica stickyness e a a config no haproxy.conf
+4. fecha e abre o firefox a acesse a aplicacao na parta 8080
+4.1 verifique qual tomcat respondeu
+4.1 verifique novamente o JSESSIONID (deve estar com prefixo tomcat 1 ou 2)
+5 Testa alta disponibilidade e falta de confiabilidade
+5.1 mate o tomcat que respondeu (use sh kill-tomcat[1,2].sh)
+5.2 testa a aplicacao pela interface - nao funciona (perdemos os dados da sessao)
+5.3 envia um novo request - funciona (aplicacao continua em pe)
+5.4 verifique novamente o cookie
+6 fala um pouco sobre escalabildade e desempenho dessa arquitetura	

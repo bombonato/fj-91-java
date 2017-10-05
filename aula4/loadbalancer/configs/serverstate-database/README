@@ -1,0 +1,58 @@
+Config:  HAProxy (sticky) com tomcats e session backup no mysql
+
+
+Ganho: Quero mais confiabilidade do que exemplo serverstate-session. Nao quero perder os dados da sessao quando um tomcat cai entao é preciso fazer um backup. Qual é o lugar mais confiavel? o banco relacional ....
+
+Arquitetura:
+
+	 haproxy (8080)
+	 /            \
+ tomcat1 (8081)    tomcat2 (8082)  
+	 \	     /
+       mysql (session backup)
+
+Tradeoff:
+* alta-diponibilidade (redundancia)
+* mais confiavel (tem bd como backup), mas depende do idle time configurado
+* escalalabilidade mais limitada (dependendo do banco ...)
+* desempenho igual comparado com serverstate-session 
+
+Configuracoes dos Tomcats 
+ * em cada tomcat tem um context.xml com session manager configurado
+ * tomcats fazem backup no banco usando PersistenceManager com JDBCStore 
+ * com o backup failover do tomcat é possivel
+
+Para rodar:
+
+1) Preparar mysql:
+ * tem um sql.txt para configurar o banco
+ * executa o sql com o script create-bd.sh
+
+Pelo terminal:
+ mysql -u root
+ use tomcat
+ desc sessions;
+ select session_id from sessions;
+
+2) Na pasta do haproxy:
+ ./run-haproxy-sticky.sh (melhor: deixa o haproxy rodar)
+
+3) na pasta configs serverstate-database: 
+ ./run-tomcat1.sh
+ ./run-tomcat2.sh
+
+Sugestao de ordem para executar:    
+ 1 Configura mysql 
+ 2 rodar haproxy e os dois tomcats
+ 3 acesse a aplicacao
+ 3.1 adicione um livro
+ 3.2 vê qual tomcat respondeu no console
+ 3.3 verifique novamente o cookie no browser
+ 3.4 verifique tambem o banco se foi feito o backup (select session_id from session), 
+ (a session deve estar gravada no banco (asincrono, pode demorar um pouco))
+ 4 matar o tomcat que responde (kill-tomcat[1,2].sh)
+ 4.1 tenta acessar a aplicacao pela interface, outro tomcat deve recuperar a sessao do bancho
+ 4.2 aplicacao deve continuar funcionando sem perder os dados da sessao (confiabilidade)
+ 4.3 verifique novamente cookie no browser, percebe que o cookie nao mudou
+ 5 inicia o tomcat que foi morto
+ 5.1 perceba que o tomcat novamente assume o trabalho
