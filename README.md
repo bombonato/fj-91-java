@@ -924,5 +924,102 @@ Com boas práticas de programação é possível atingir os 2 primeiros (extensi
 * Cluster, para melhorar o tempo de acesso se estiver demandando muito.
 * Distribuição de carga de dados.
 * Ajuste de Infra
+* Async - jms,  (pg 178)
+
+Outras ferramentas de avaliação de desempenho
+- VisualVM
+- JMeter
+- Hibernate Statistics (caso esteja usando hibernate e JPA)
 
 
+# Aula 4
+
+*Escalabilidate*
+
+Como o sistema aguenta a carga. Se tem 1000 usuários e mudar para 10.000 ele continua atuando bem?
+pg 188 - considerações sobre escalabilidade
+
+* Cluster / Balanceador
+	* Usar o Apache, HAProxy, Ngix para fazer o balanceamento.
+	* Modo *Stick Session*: se ele começa a requisição com determinado servidor, as requisições subsequentes deste cliente continuam no mesmo servidor.
+	Mito: Tomcat é só para projetos pequenos; projetos maiores precisaria de um servidor J2EE (ex. JBoss, Glassfish, etc). Na verdade, pode usar o Tomcat para atender diversas conexões.
+* Cloud Computing
+* NoSQL
+	* Banco de dados Relacional não escala bem, normalmente se escala a camada Web (em vários Tomcats), mas com 1 ponto único de acesso (ex. ao Oracle)
+	* Já os bd's NoSQL nasce com este intuito de ser escalável.
+
+*Disponibilidade*
+
+Evitar o ponto único de falha
+
+* Cluster / Balanceador
+* Cloud
+* NoSQL
+* Redundância (BD's, Datacenters)
+* Backups
+
+Netflix - [Chaos Monkey](https://github.com/Netflix/chaosmonkey) - projeto para testar resiliencia de sua arquitetura, o serviço derruba aleatoriamente alguns servidores para avaliar a recuperação de seus servidores.
+
+*Confiabilidade*
+
+As informações providas pelo sistema são corretas, confiáveis.
+
+* Testes 
+	* Ajuda a garantir a conformidade do sistema
+* Segurança
+
+A confiabilidade pode conflitar com outros RNF, por exemplo, ao usar o cache você pode disponibilizar uma informação não tão atualizada para o solicitante.
+
+As escolhas sobre RNF são relacionadas a área de negócio. Contudo, vários destes requisitos são técnicos o que torna difícil da escolha pela área de negócios/clientes. Uma abordagem seria explicar para o cliente o que é escalabilidade, desempenho e confiabilidade e pedir para escolher 2, com isso, ele acaba pensando mais junto as importâncias do negócio e ajuda a identificar o que poderia ser sacrificado em prol de outro requisito.
+
+*Gerenciabilidade*
+
+Sua capacidade de gerenciar os recursos de infraestrutura de sua aplicação.
+
+* Monitoramento
+	* VisualVM, Zabbix, Nagios, Cacti, Google Analytics, 
+	* [New Relic](https://newrelic.com/), [PSI Proble](https://github.com/psi-probe/psi-probe), [APM AppDynamics](https://en.wikipedia.org/wiki/AppDynamics)
+
+*Segurança*
+
+* Infra
+	* correções, patchs, atualizações
+	* firewall, anti-virus, SO, BDs, Monitoramento, etc.
+* Nível de Aplicação
+	* [OWASP](https://www.owasp.org) - site que aborda documentos, cursos, relatórios (Top 10 vulnerabilidades comuns), etc. [Relatório TOP 10 Vulnerabilidades](https://www.owasp.org/index.php/Category:OWASP_Top_Ten_Project#OWASP_Top_10_for_2013)
+
+#### SQL Injection
+- site com login, no campo login colocar
+	- LOGIN: ' or 1=1 or 'A'='A
+	- SEN.HA: \<qualquer coisa>
+- Para comando SQL tipo:
+```sql
+SELECT * FROM usuarios
+WHERE login='"+$login+"'
+AND senha='"+$senha+"';
+```
+
+#### XSS - Cross-Site Scripting
+- mesma idéia do SQL Injection, mas injeta um script sql
+- por exemplo, na tela de input de "nome:", inserir o código abaixo. Com isso, ao acessar a página x, no momento que exibi o nome do usuário, ele faria um alert.
+```js
+<script>alert('xss');</script>
+```
+- outra idéia seria usar o "prompt" para pedir entrar com alguma infomação, que poderia ser uma msg "sua seção expirou, entre novamente com sua senha" e lançar um prompt para capturar a senha do usuário.
+- Um ataque conhecido de XSS foi no MySpace, mascarando um javascript dentro de um código html (bit.ly/samy-xss).
+
+#### Session Hijack
+- se o tomcat tem uma seção contendo um ID, é implementado por cookies a forma de guardar o número da seção do usuário. Um ataque seria refazer o pedido chutando um número (como se tivesse pego o cockie da máquina do usuário contendo o id da seção). Hoje implementam algoritimos de hash para esconder o id, ficando inviável a descoberta por chute do número
+
+#### Cross-Site Request Forgery (CSRF)
+- mandar a requisição direto pelo cliente
+- Laravel, automaticamente já proteje contra CSRF, ele obriga os formulários a já serem enviados com token.
+
+Bibliotecas
+- No OWASP
+	- Anti Samy
+	- Componentes vulneráveis (roda análise em todos os jars e gera um relatório de vulnerabilidades)
+
+
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+export PATH=$JAVA_HOME/bin:$PATH
