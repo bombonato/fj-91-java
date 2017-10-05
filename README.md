@@ -1017,15 +1017,20 @@ Ainda sobre XSS
 
 #### Cross-Site Request Forgery (CSRF)
 - mandar a requisição direto pelo cliente
+- muito usado, pois é difícil de detectar e é possível colocar dentro de Hexadecimal, em uma url de imagem, no css, e muitos outros meios.
 - Laravel, automaticamente já proteje contra CSRF, ele obriga os formulários a já serem enviados com token.
+- a W3C desenvolveu uma especificação implmentada pelos browser para protejer as aplicações de ataque, chamado [*Content Security Policy*](http://blog.caelum.com.br/content-security-policy-uma-arma-eficaz-contra-ataques-xss/); Outro especificação é o *Subresource Integrity* (tem haver com CDN). Com o CDN (Content De), subir seus arquivos estáticos na CDN e ela espalha em vários servidores em diversos continentes, com isso, melhorando o tempo de acesso e diminuindo a latência. Com o Subresource Integrity, é gerado um hash com seu contéudo, ao buscar um recurso no CDN, ele compara o hash gerado com o hash do recurso baixado, se estiver diferente, não irá carregar/executar. Quando seus recursos estão em outro lugar e você quer garantir que os recursos acessados são seus e não foram modificados, o Subreource Integrity ajuda nisso. Basta fazer a configuração, o processo todo é feito pelo browser.
+
 
 Bibliotecas
 - No OWASP
 	- Anti Samy
 	- Componentes vulneráveis (roda análise em todos os jars e gera um relatório de vulnerabilidades)
 
+Sites
+- Recompensansas ao encontrar bugs no site: [GitHub Security Bug Bounty](bounty.github.com/)
 
-Exercício de Disponibilidade do LoadBalancer
+##### Exercício de Disponibilidade do LoadBalancer
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
@@ -1038,4 +1043,24 @@ loadbalancer/configs/serverstate-database/tomcat1/conf/context.xml
 Sobre uso de memcache em crossside usando cluster de tomcat
 loadbalancer/configs/serverstate-memcached/tomcat1/conf/context.xml
 - reparar o MemcachedBackupSessionManager e a configuração dos nós do Memcached
+
+### NoSQL
+- surge de um evento para tratar sobre outras soluções diferentes dos bancos relacionais em SQL. Na época, surge uma hashtag chamada NoSQL e o termo pegou
+- é schemeless, não tem esquema bem definido, você simplesmente armazena a informação, se um dia precisar evoluir, simplemente cria o novo campo, sem prejudicar os anteriores.
+- não tem idéia de separar a informação (pedido de um lado, produto de outro, cliente de outro, etc). É tudo armazenado em um bloco.
+- Usar em situações de escalabilidades, modelos mais simples de dados.
+- Teorema CAP (Constency x Availability x Network Partition Tolerance) [Blog Caelum](http://blog.caelum.com.br/nosql-do-teorema-cap-para-paccl/)
+	- consistência forte (C – Consistency), alta disponibilidade (A – availability) e tolerância a particionamento dos dados na rede(P – Network Partition Tolerance).
+	- não é que ao escolher um lado acaba não tendo nenhum do outro aspecto, mas sim a questão de priorizar.
+
+Em BDs Relacionais, em situações de concorrência, pode-se usar o lock pessimista (trava o registro desde a primeira leitura) ou lock otimista (usa um versionamento do registro para identificar se foi ou não alterado ao checar por outro usuário). Este cenário, onde o banco ẽ compartilhad
+Em situações onde existam outras instâncias de banco, temos problemas de sincronização na comunicação entre estas instâncias que precisam sincronizarem.
+
+### Arquitetura em Camadas
+
+Ao falar em **layers**, normlamente pensa-se em separação lógicas, em como organizar o código da aplicação de maneira a diminuir o acoplamento e facilitar mudanças.
+Já a divisão em **tiers** visa a separações físicas entre partes do sistema.
+
+#### Lógicas de Negócio em BD
+Usar *stored procedure* talvez seja essencial em uma aruitetura antiga de dois tiers, por causa de segurança e performance, mas traz os problemas de dependências do banco de dados, dificuldade de integração e pouca separação de responsabilidades.
 
