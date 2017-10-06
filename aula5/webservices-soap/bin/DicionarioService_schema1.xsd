@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://ws.caelum.com.br/" xmlns:tns="http://ws.caelum.com.br/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="adicionaTraducao" type="tns:adicionaTraducao"/>
+
+  <xs:element name="adicionaTraducaoResponse" type="tns:adicionaTraducaoResponse"/>
+
+  <xs:element name="traduz" type="tns:traduz"/>
+
+  <xs:element name="traduzResponse" type="tns:traduzResponse"/>
+
+  <xs:complexType name="traduz">
+    <xs:sequence>
+      <xs:element name="palavra" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="traduzResponse">
+    <xs:sequence>
+      <xs:element name="traducao" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="adicionaTraducao">
+    <xs:sequence>
+      <xs:element name="palavra" type="xs:string" minOccurs="0"/>
+      <xs:element name="traducao" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="adicionaTraducaoResponse">
+    <xs:sequence/>
+  </xs:complexType>
+</xs:schema>
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<pedido>
+    <data>2013-11-06T01:23:17.201-02:00</data>
+    <itens>
+        <item>
+            <id>2_EBOOK</id>
+            <titulo>SOA aplicado: Integrando com web services e além</titulo>
+            <image>soa.png</image>
+            <codigo>SOA</codigo>
+            <formato>EBOOK</formato>
+            <quantidade>1</quantidade>
+            <quantidadeEstoque>0</quantidadeEstoque>
+            <valorUnico>29.90</valorUnico>
+        </item>
+    </itens>
+    <pagamento>
+        <id>17</id>
+        <status>CONFIRMADO</status>
+        <valor>29.90</valor>
+        <links>
+            <links/>
+        </links>
+    </pagamento>
+</pedido>
