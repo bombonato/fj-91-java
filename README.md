@@ -1119,3 +1119,16 @@ Quando um projeto é J2EE, o pacote terá uns 2-6 Mb, pois várias das bibliotec
 
 O J2EE depende da Especificação; já no Spring não está restrito a especificação, se adapta melhor as novas tecnologias lançadas no mercado.
 
+### Integração de Sistemas
+
+Inicialmente tinhamos a integração entre sistemas usando **arquivos**.
+
+Posteriormente começou a usar a integração de sistemas usando **banco de dados**.
+
+Depois começou a chamada de partes do sistema remotamente, muito sobre **RPC** (*Remote Procedure Call*), como o RMI no Java. Nessa parte, também pode ser abordado os Serviços Web usando o protocolo SOAP ou REST.
+
+Outro conceito é usando sistemas de **Mensageria**, como o JMS no Java; A idéia incial é evitar o acoplamento na conversa entre sistemas diferentes. Nesse caso, existe um componente no meio da conversa (chamado de MOM - Middleware on ) e de forma assincrona.
+
+Links
+- bit.ly/fj91-livros
+- https://gist.github.com/rcaneppele/a72fba4290d08185b1508eb7f7dc9fcc
