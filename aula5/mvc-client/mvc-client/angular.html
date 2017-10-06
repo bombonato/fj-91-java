@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt" ng-app="linguagemModule">
+	<head>
+		<meta charset="UTF-8">
+		<title>Linguagens de Programação</title>
+		<link rel="stylesheet" href="css/bootstrap.css">
+		<link rel="stylesheet" href="css/bootstrap-theme.css">
+	</head>
+
+	<body class="container text-center" ng-controller="LinguagensController">
+		<h1 class="text-center">Linguagens</h1>
+
+		<ul class="lista list-unstyled">
+			<li class="lista" ng-repeat="linguagem in linguagens">
+				{{linguagem.getNome()}}
+			</li>
+		</ul>
+
+		<label>Nova</label>
+		<input type="text" ng-model="nome" />
+		<button class="btn btn-primary" ng-click="adiciona()">
+			Adiciona
+		</button>
+		
+		<script src="js/lib/angular.js"></script>
+		<script src="js/com-angular.js"></script>
+	</body>
+</html>

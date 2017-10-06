@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html">
+<h:head>
+</h:head>
+<h:body>
+
+	<h:outputStylesheet library="css" name="estilo.css"/>
+
+	<h:form id="cadastro">
+		<h:messages />
+		<h:outputLabel for="nome" value="Nome:" />
+		<h:inputText id="nome" value="#{pessoasController.pessoa.nome}" />
+
+		<h:outputLabel for="idade" value="Idade:" />
+		<h:inputText id="idade" value="#{pessoasController.pessoa.idade}" />
+	
+		<h:commandButton action="#{pessoasController.incluir}" value="gravar">
+		</h:commandButton>
+		
+		<h:dataTable value="#{pessoasController.pessoas}" var="pessoa">
+			<h:column>
+				<f:facet name="header">
+					<h:outputText value="Nome" />
+				</f:facet>
+				#{pessoa.nome}
+			</h:column>
+			<h:column>
+				<f:facet name="header">
+					<h:outputText value="Idade" />
+				</f:facet>
+				#{pessoa.idade}
+			</h:column>
+		</h:dataTable>
+	</h:form>
+	
+</h:body>
+</html>

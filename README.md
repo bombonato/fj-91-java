@@ -1059,8 +1059,49 @@ Em situações onde existam outras instâncias de banco, temos problemas de sinc
 ### Arquitetura em Camadas
 
 Ao falar em **layers**, normlamente pensa-se em separação lógicas, em como organizar o código da aplicação de maneira a diminuir o acoplamento e facilitar mudanças.
-Já a divisão em **tiers** visa a separações físicas entre partes do sistema.
+Já a divisão em **tiers** visa a separações físicas entre partes do sistema, de modo geral caracterizamos como componentes do sistema que rodam ou poderiam facilmente rodar em máquinas separadas.
 
 #### Lógicas de Negócio em BD
 Usar *stored procedure* talvez seja essencial em uma aruitetura antiga de dois tiers, por causa de segurança e performance, mas traz os problemas de dependências do banco de dados, dificuldade de integração e pouca separação de responsabilidades.
 
+# Aula 5
+
+*Organização do Projetos*
+- MVC
+- DDD
+- Packages by Layer (diretórios DAO, Repository, Controller, View, etc)
+- Packages by Feature (mais usado nos modelos DDD. ex. Usuario (tem controller, DAO, etc), ficando tudo mais agrupado por funcionalidades)
+	- vide [Blog Caelum](http://blog.caelum.com.br/como-organizar-os-pacotes-da-sua-aplicacao/)
+
+*Camada Web*
+- pg 148
+
+Hoje (2017) o JFS já esta caindo em desuso em favor de tecnologias JavaScript, como Angular, BootStrap para componentes.
+
+O Spring também está muito forte no mercado; inclusive com o projeto *Spring Boot* para facilitar a criação dos projetos.
+
+*Camada persistência*
+- pg 156
+
+Links:
+ - [Vladi Halcea](https://vladmihalcea.com/) - High Performance Java Persistence
+
+**JDBC**
+* Problemas:
+	* No APP está usando o modelo OO, no BD usa o modelo Relacional. Ao usar o JDBC, ao implementar a classe DAO, você está fazendo a ponte entre estes 2 mundos (OO e Relacional). No OO temos as Classes no BD temos as Tabelas. Nas Classes temos os atributos, nas Tabelas temos as colunas. No OO temos os Objetos no BD temos as Tuplas (Linhas).
+	* É trabalhaso fazer toda essa ponte.
+	* Código muito extenso e verboso (DAOs, mapeamentos, uso)
+	* Tem acoplamento, ao mudar OO precisaria refletir no BD. Ao mudar as Tabelas, teria que mudar os DAOs, e talvez em todos os métodos que utilizam a DAO. Ou seja, qualquer mudança no BD gera vários pontos de alteração no código.
+	* Nessa época surge o Hibernate, uma abstração em cima do JDBC, o que diminui drasticamente o acoplamento, diminuindo as mudanças relacionadas no BD e refletidas no código.
+	* Um tempo depois, foi criada uma especificação baseada nas idéias do Hibernate, a especificação JCP chamava-se **JPA**, deixando assim a flexibilidade de mudar as implementações.
+
+**JPA**
+* segue o conceito de CoC (*Convention Over Configuration*), a tabela usa o mesmo nome da classe.
+* *Pool de Conexões*: recentemente tem a biblioteca **HirakiCP** voltada para desempenho.
+* *Cache* - de 1o nível, de 2o nível, nas Entidades, nos resultados
+	* toda estratégia de cache é perigosa porque, para evitar ficar com os dados obsoletos, é preciso uma boa política de invalidação em caso de atualizações.
+	* use ache apenas em entidades que não mudam nunca ou nas que mudam muito pouco em relação às consultas.
+	* a adoção de caches favorece desempenho e escalabilidade em troca de maior consumo de memória.
+	* Caches são ainda mais eficazes para aplicações nas quais dados desatualizados (*stale*) podem ser mostrados por determinado período de tempo sem prejuízo para o cliente.
+	* é importante também colocar essas entidades no cache de segundo níve e, não apenas a query, para que a nova execução não precise fazer nenhum hit no banco de dados, utilizando apenas os dados da memõria para devolver o resultado.
+	* queries que envolvam tabelas modificadas constantemente não são boas candidatas ao query cache.
