@@ -1080,6 +1080,8 @@ Hoje (2017) o JFS já esta caindo em desuso em favor de tecnologias JavaScript, 
 
 O Spring também está muito forte no mercado; inclusive com o projeto *Spring Boot* para facilitar a criação dos projetos.
 
+Com o uso de tipos diferentes de clientes (Mobile, Web, Desktop), surge a idéia de desacoplar do frontend a camada de visão. Com isso, começa a usar muito a API REST para enviar dados aos clientes do backand. Assim, no cliente, usa-se o próprio mobile ou bibliotecas como Angular para recuperar estes dados do backend.
+
 *Camada persistência*
 - pg 156
 
@@ -1105,3 +1107,15 @@ Links:
 	* Caches são ainda mais eficazes para aplicações nas quais dados desatualizados (*stale*) podem ser mostrados por determinado período de tempo sem prejuízo para o cliente.
 	* é importante também colocar essas entidades no cache de segundo níve e, não apenas a query, para que a nova execução não precise fazer nenhum hit no banco de dados, utilizando apenas os dados da memõria para devolver o resultado.
 	* queries que envolvam tabelas modificadas constantemente não são boas candidatas ao query cache.
+
+*Camada de Negócio*
+* JPA
+* EJB (hoje mais para classe de serviço, pool de objetos)
+* JAX-WS/JAX-RS (SOAP e REST respectivamente)
+* JMS
+* CDI (deixar código desacoplado)
+
+Quando um projeto é J2EE, o pacote terá uns 2-6 Mb, pois várias das bibliotecas já estão incorporadas no servidor de aplicação. Agora em um projeto solo, como o Spring, o projeto terá uns 60 Mb, pois todas as bibliotecas serão empacotadas no projeto.
+
+O J2EE depende da Especificação; já no Spring não está restrito a especificação, se adapta melhor as novas tecnologias lançadas no mercado.
+

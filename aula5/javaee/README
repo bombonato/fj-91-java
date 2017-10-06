@@ -1,0 +1,102 @@
+javaee1
+=======
+
+
+
+No Mysql: create database fj91;
+
+Copie o JAR mysql-connector-java-5.1.21-bin.jar (na raiz desse projeto) para a pasta:
+
+JBOSS/modules/com/mysql/main/mysql-connector-java-5.1.21-bin.jar
+
+
+Configuração do datasource:
+==========================
+
+Define a datasource dentro do arquivo: JBOSS/standalone/configuration/standalone.xml
+
+<datasource jndi-name="java:jboss/datasources/mysqlDS" pool-name="mysqlDS" enabled="true" use-java-context="true">
+    <connection-url>jdbc:mysql://localhost:3306/fj91</connection-url>
+    <driver>com.mysql</driver>
+    <pool>
+        <min-pool-size>10</min-pool-size>
+        <max-pool-size>100</max-pool-size>
+        <prefill>true</prefill>
+    </pool>
+    <security>
+        <user-name>root</user-name>
+    </security>
+</datasource>
+
+
+No seção dos drivers, registre o driver do MySQL:
+
+<driver name="com.mysql" module="com.mysql">   
+	<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+</driver>
+
+
+Crie um novo arquivo module.xml na mesma pasta: JBOSS/modules/com/mysql/main/module.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="com.mysql">
+  <resources>
+    <resource-root path="mysql-connector-java-5.1.21-bin.jar"/>
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+  </dependencies>
+</module>
+
+
+Configuração do JAAS (Segurança):
+=================================
+
+No arquivo standalone.xml dentro da tag security-domains:
+
+<security-domain name="fj91sec" cache-type="default">
+    <authentication>
+        <login-module code="Database" flag="required">
+            <module-option name="dsJndiName" value="java:jboss/datasources/mysqlDS"/>
+            <module-option name="principalsQuery" value="select senha from Usuario where login like ?"/>
+            <module-option name="rolesQuery" value="select g.nome as role, 'Roles' from Usuario u, Grupo g, Usuario_Grupo ug where u.id=ug.Usuario_id and ug.grupos_id=g.id and u.login like ?"/>
+        </login-module>
+    </authentication>
+</security-domain>
+                
+Repare que User,Grupo relacionamento não fazem parte da aplicação.
+       
+       
+Configuração do JAAS no projeto:
+      
+      
+jboss-web.xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<jboss-web>
+	    <security-domain>java:/jaas/fj91sec</security-domain>   
+	</jboss-web>
+
+web.xml
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>Url de autenticacao</web-resource-name>
+			<url-pattern>/adiciona.jsf</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>*</role-name>
+		</auth-constraint>
+		<user-data-constraint>
+			<transport-guarantee>NONE</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint>
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<form-login-config>
+			<form-login-page>/login.jsf</form-login-page>
+			<form-error-page>/login.jsf?message=login incorreto</form-error-page>
+		</form-login-config>
+	</login-config>
+	<security-role>
+		<role-name>*</role-name>
+	</security-role>
+	

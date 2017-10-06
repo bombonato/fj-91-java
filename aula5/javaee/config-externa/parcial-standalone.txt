@@ -1,0 +1,45 @@
+
+Configuração do Datasource:
+=================================
+
+
+No seção dos drivers do arquivo: JBOSS/standalone/configuration/standalone.xml registre o driver do MySQL:
+
+<driver name="com.mysql" module="com.mysql">   
+	<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
+</driver>
+
+
+Define a datasource dentro do arquivo: JBOSS/standalone/configuration/standalone.xml
+
+<datasource jndi-name="java:jboss/datasources/mysqlDS" pool-name="mysqlDS" enabled="true" use-java-context="true">
+    <connection-url>jdbc:mysql://localhost:3306/fj91</connection-url>
+    <driver>com.mysql</driver>
+    <pool>
+        <min-pool-size>10</min-pool-size>
+        <max-pool-size>100</max-pool-size>
+        <prefill>true</prefill>
+    </pool>
+    <security>
+        <user-name>root</user-name>
+    </security>
+</datasource>
+
+
+
+
+
+Configuração do JAAS (Segurança):
+=================================
+
+No arquivo standalone.xml dentro da tag security-domains:
+
+<security-domain name="fj91sec" cache-type="default">
+    <authentication>
+        <login-module code="Database" flag="required">
+            <module-option name="dsJndiName" value="java:jboss/datasources/mysqlDS"/>
+            <module-option name="principalsQuery" value="select senha from Usuario where login like ?"/>
+            <module-option name="rolesQuery" value="select g.nome as role, 'Roles' from Usuario u, Grupo g, Usuario_Grupo ug where u.id=ug.Usuario_id and ug.grupos_id=g.id and u.login like ?"/>
+        </login-module>
+    </authentication>
+</security-domain>

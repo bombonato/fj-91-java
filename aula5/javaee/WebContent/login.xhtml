@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Página de Login</title>
+</head>
+<body>
+
+	<h2>Aplicação JavaEE</h2>
+
+	Tem dois usuários disponíveis, o grupo ROLE_USER tem acesso livre.
+	
+	<br /> <br />   
+
+	Login: user <br /> 
+	Senha: pass <br /> 
+	Grupo: ROLE_USER
+
+	<br /> <br />   
+	
+	Login: admin <br /> 
+	Senha: pass  <br /> 
+	Grupo: ROLE_ADMIN <br /> 
+
+	<br /> <hr />
+	 
+	<h2>Login</h2>
+
+	<form method="post" action="j_security_check">
+			<h3>#{param.message}</h3>
+			<label for="login">Login:</label>
+			<input type="text" name="j_username" size="15" id="login" />
+			<br />
+			<label for="senha">Senha:</label>
+			<input type="password" size="15" name="j_password" id="senha" />
+			<br />
+			<input type="submit" value="Logar" />
+	</form>
+ 
+	<hr />
+	
+	<h2>WebServices disponíveis</h2>
+	
+	<a href="ContatosWS?wsdl">WebService WS* Contatos</a>
+	
+	<br /> 
+	
+	<a href="rest/contatos/1">WebService Rest Contatos</a>
+	
+</body>
+</html>
